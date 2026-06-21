@@ -11,7 +11,7 @@ export const assets = {
   flowerOpen: new URL("../../花朵睁眼图.png", import.meta.url).href,
   flowerClosed: new URL("../../花朵闭眼图.png", import.meta.url).href,
   map: new URL("../../成长map路径参考图.png", import.meta.url).href,
-  mapDetail: new URL("../../map路径点击放大参考图.png", import.meta.url).href,
+  mapDetail: new URL("../../map节点放大图加文字后参考示例.png", import.meta.url).href,
   bigIsland: new URL("../../大浮岛素材图.png", import.meta.url).href,
   dailySpiritOpen: new URL("../../权杖精灵睁眼素材图.png", import.meta.url).href,
   dailySpiritClosed: new URL("../../权杖精灵闭眼图.png", import.meta.url).href,
