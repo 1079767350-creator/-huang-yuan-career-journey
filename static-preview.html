@@ -354,31 +354,37 @@
       let targetBoost = 0;
       let boost = 0;
 
-      hero.addEventListener("pointermove", (event) => {
-        const rect = hero.getBoundingClientRect();
-        const now = performance.now();
-        const dt = Math.max(now - lastTime, 16);
-        const speed = Math.min(Math.hypot(event.clientX - lastX, event.clientY - lastY) / dt, 2.2);
-        const xRatio = (event.clientX - rect.left) / rect.width;
-        targetBoost = xRatio < 0.3 || xRatio > 0.66 ? Math.min(speed * 1.35, 1.9) : 0;
-        lastX = event.clientX;
-        lastY = event.clientY;
-        lastTime = now;
-      });
+      if (hero) {
+        hero.addEventListener("pointermove", (event) => {
+          const rect = hero.getBoundingClientRect();
+          const now = performance.now();
+          const dt = Math.max(now - lastTime, 16);
+          const speed = Math.min(Math.hypot(event.clientX - lastX, event.clientY - lastY) / dt, 2.2);
+          const xRatio = (event.clientX - rect.left) / rect.width;
+          targetBoost = xRatio < 0.3 || xRatio > 0.66 ? Math.min(speed * 1.35, 1.9) : 0;
+          lastX = event.clientX;
+          lastY = event.clientY;
+          lastTime = now;
+        });
 
-      hero.addEventListener("pointerleave", () => {
-        targetBoost = 0;
-      });
+        hero.addEventListener("pointerleave", () => {
+          targetBoost = 0;
+        });
+      }
 
-      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (hero && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         requestAnimationFrame(function animate(time) {
           boost += (targetBoost - boost) * 0.075;
           targetBoost *= 0.975;
           const base = 1 + boost;
           const slow = time * 0.001;
           hero.style.setProperty("--tentacle-boost", boost.toFixed(3));
-          stars.style.transform = `translate3d(${Math.sin(slow * 0.22) * 10}px, ${Math.cos(slow * 0.18) * 8}px, 0)`;
-          drops.style.transform = `translate3d(${Math.cos(slow * 0.3) * 8}px, ${Math.sin(slow * 0.26) * 10}px, 0)`;
+          if (stars) {
+            stars.style.transform = `translate3d(${Math.sin(slow * 0.22) * 10}px, ${Math.cos(slow * 0.18) * 8}px, 0)`;
+          }
+          if (drops) {
+            drops.style.transform = `translate3d(${Math.cos(slow * 0.3) * 8}px, ${Math.sin(slow * 0.26) * 10}px, 0)`;
+          }
           if (pressureTitle) {
             const titleRect = pressureTitle.getBoundingClientRect();
             const maxDist = Math.max(titleRect.width * 0.56, 180);
@@ -400,6 +406,7 @@
       }
 
       function blink() {
+        if (!openEye || !closedEye) return;
         openEye.classList.add("is-hidden");
         closedEye.classList.add("is-visible");
         window.setTimeout(() => {
@@ -408,19 +415,24 @@
         }, 220);
       }
 
-      blinkFlower.addEventListener("mouseenter", blink);
+      if (blinkFlower) {
+        blinkFlower.addEventListener("mouseenter", blink);
+      }
       function scheduleBlink() {
         window.setTimeout(() => {
           blink();
           scheduleBlink();
         }, 2000 + Math.random() * 1000);
       }
-      scheduleBlink();
+      if (openEye && closedEye) {
+        scheduleBlink();
+      }
 
       const vineOpenEye = document.querySelector(".eye-vine-divider__image--open");
       const vineClosedEye = document.querySelector(".eye-vine-divider__image--closed");
       const vineButton = document.querySelector(".eye-vine-divider__button");
       function blinkVine() {
+        if (!vineOpenEye || !vineClosedEye) return;
         vineOpenEye.classList.add("is-hidden");
         vineClosedEye.classList.add("is-visible");
         window.setTimeout(() => {
@@ -428,20 +440,25 @@
           vineClosedEye.classList.remove("is-visible");
         }, 220);
       }
-      vineButton.addEventListener("mouseenter", blinkVine);
+      if (vineButton) {
+        vineButton.addEventListener("mouseenter", blinkVine);
+      }
       function scheduleVineBlink() {
         window.setTimeout(() => {
           blinkVine();
           scheduleVineBlink();
         }, 2400 + Math.random() * 1100);
       }
-      scheduleVineBlink();
+      if (vineOpenEye && vineClosedEye) {
+        scheduleVineBlink();
+      }
 
       let activeDaily = 0;
       const dailyStack = document.querySelector(".memory-orbit");
       const dailyNote = document.querySelector(".memory-note");
       let dailyCards = [];
       function makeDailyCards() {
+        if (!dailyStack) return;
         dailyStack.innerHTML = "";
         dailyCards = dailyItems.map((item, index) => {
           const card = document.createElement("button");
@@ -458,6 +475,7 @@
         });
       }
       function renderDaily() {
+        if (!dailyNote || !dailyCards.length) return;
         const currentDaily = dailyItems[activeDaily];
         dailyNote.innerHTML = `<p>${currentDaily.label}</p><h3>${currentDaily.title}</h3><span>${currentDaily.description}</span>`;
         dailyNote.style.animation = "none";
@@ -486,13 +504,20 @@
         activeDaily = (activeDaily + direction + dailyItems.length) % dailyItems.length;
         renderDaily();
       }
-      document.querySelector(".memory-controls__prev").addEventListener("click", () => moveDaily(-1));
-      document.querySelector(".memory-controls__next").addEventListener("click", () => moveDaily(1));
+      const memoryPrev = document.querySelector(".memory-controls__prev");
+      if (memoryPrev) {
+        memoryPrev.addEventListener("click", () => moveDaily(-1));
+      }
+      const memoryNext = document.querySelector(".memory-controls__next");
+      if (memoryNext) {
+        memoryNext.addEventListener("click", () => moveDaily(1));
+      }
       const islandSpirit = document.querySelector(".island-spirit");
       const spiritOpen = document.querySelector(".island-spirit__image--open");
       const spiritClosed = document.querySelector(".island-spirit__image--closed");
       let spiritBlinkTimer = null;
       function blinkSpirit() {
+        if (!spiritOpen || !spiritClosed) return;
         window.clearTimeout(spiritBlinkTimer);
         spiritOpen.classList.add("is-hidden");
         spiritClosed.classList.add("is-visible");
@@ -501,26 +526,34 @@
           spiritClosed.classList.remove("is-visible");
         }, 220);
       }
-      islandSpirit.addEventListener("mouseenter", blinkSpirit);
+      if (islandSpirit) {
+        islandSpirit.addEventListener("mouseenter", blinkSpirit);
+      }
       function scheduleSpiritBlink() {
         window.setTimeout(() => {
           blinkSpirit();
           scheduleSpiritBlink();
         }, 3000 + Math.random() * 2000);
       }
-      scheduleSpiritBlink();
+      if (spiritOpen && spiritClosed) {
+        scheduleSpiritBlink();
+      }
       let dailyTouchStart = null;
       const dailyIsland = document.querySelector(".daily-island");
-      dailyIsland.addEventListener("touchstart", (event) => {
-        dailyTouchStart = event.touches[0].clientX;
-      }, { passive: true });
-      dailyIsland.addEventListener("touchend", (event) => {
-        if (dailyTouchStart === null) return;
-        const delta = event.changedTouches[0].clientX - dailyTouchStart;
-        if (Math.abs(delta) > 42) moveDaily(delta > 0 ? -1 : 1);
-        dailyTouchStart = null;
-      });
-      window.setInterval(() => moveDaily(1), 5200);
+      if (dailyIsland) {
+        dailyIsland.addEventListener("touchstart", (event) => {
+          dailyTouchStart = event.touches[0].clientX;
+        }, { passive: true });
+        dailyIsland.addEventListener("touchend", (event) => {
+          if (dailyTouchStart === null) return;
+          const delta = event.changedTouches[0].clientX - dailyTouchStart;
+          if (Math.abs(delta) > 42) moveDaily(delta > 0 ? -1 : 1);
+          dailyTouchStart = null;
+        });
+      }
+      if (dailyStack && dailyNote) {
+        window.setInterval(() => moveDaily(1), 5200);
+      }
       makeDailyCards();
       renderDaily();
 
@@ -530,6 +563,7 @@
       const campusDots = document.querySelector(".campus-story__dots");
       const campusStory = document.querySelector(".campus-story");
       function renderCampus() {
+        if (!campusPanel || !campusDots) return;
         const story = campusStories[activeCampus];
         campusPanel.innerHTML = `
           <div class="campus-story__image"><img src="${story.image}" alt="" aria-hidden="true" /></div>
@@ -551,17 +585,25 @@
         activeCampus = (activeCampus + direction + campusStories.length) % campusStories.length;
         renderCampus();
       }
-      document.querySelector(".campus-story__nav--prev").addEventListener("click", () => moveCampus(-1));
-      document.querySelector(".campus-story__nav--next").addEventListener("click", () => moveCampus(1));
-      campusStory.addEventListener("touchstart", (event) => {
-        campusTouchStart = event.touches[0].clientX;
-      }, { passive: true });
-      campusStory.addEventListener("touchend", (event) => {
-        if (campusTouchStart === null) return;
-        const delta = event.changedTouches[0].clientX - campusTouchStart;
-        if (Math.abs(delta) > 42) moveCampus(delta > 0 ? -1 : 1);
-        campusTouchStart = null;
-      });
+      const campusPrev = document.querySelector(".campus-story__nav--prev");
+      if (campusPrev) {
+        campusPrev.addEventListener("click", () => moveCampus(-1));
+      }
+      const campusNext = document.querySelector(".campus-story__nav--next");
+      if (campusNext) {
+        campusNext.addEventListener("click", () => moveCampus(1));
+      }
+      if (campusStory) {
+        campusStory.addEventListener("touchstart", (event) => {
+          campusTouchStart = event.touches[0].clientX;
+        }, { passive: true });
+        campusStory.addEventListener("touchend", (event) => {
+          if (campusTouchStart === null) return;
+          const delta = event.changedTouches[0].clientX - campusTouchStart;
+          if (Math.abs(delta) > 42) moveCampus(delta > 0 ? -1 : 1);
+          campusTouchStart = null;
+        });
+      }
       renderCampus();
 
       let active = 0;
@@ -573,6 +615,7 @@
       }
 
       function renderJourney() {
+        if (!path || !summary) return;
         path.innerHTML = "";
         journeyItems.forEach((item, index) => {
           let offset = index - active;
@@ -599,7 +642,10 @@
 
         const item = journeyItems[active];
         summary.innerHTML = `<button class="text-button journey__enter"><strong>点击图标进入记忆空间</strong></button>`;
-        summary.querySelector("button").addEventListener("click", () => openDetail(item));
+        const enterButton = summary.querySelector("button");
+        if (enterButton) {
+          enterButton.addEventListener("click", () => openDetail(item));
+        }
       }
 
       function move(direction) {
@@ -644,15 +690,24 @@
           shell.classList.add("is-closing");
           window.setTimeout(() => shell.remove(), 420);
         };
-        shell.querySelector(".story-chamber__close").addEventListener("click", close);
+        const closeButton = shell.querySelector(".story-chamber__close");
+        if (closeButton) {
+          closeButton.addEventListener("click", close);
+        }
         shell.addEventListener("click", (event) => {
           if (event.target === shell) close();
         });
         document.body.appendChild(shell);
       }
 
-      document.querySelector(".round-button--left").addEventListener("click", () => move(-1));
-      document.querySelector(".round-button--right").addEventListener("click", () => move(1));
+      const journeyPrev = document.querySelector(".round-button--left");
+      if (journeyPrev) {
+        journeyPrev.addEventListener("click", () => move(-1));
+      }
+      const journeyNext = document.querySelector(".round-button--right");
+      if (journeyNext) {
+        journeyNext.addEventListener("click", () => move(1));
+      }
       window.addEventListener("keydown", (event) => {
         if (event.key === "ArrowLeft") move(-1);
         if (event.key === "ArrowRight") move(1);
